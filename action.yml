@@ -1,0 +1,53 @@
+name: 'verible-linter'
+description: 'This action checks Verilog/SystemVerilog code for formating'
+author: 'Antmicro'
+inputs:
+  config_file:
+    description: 'Relative path to configuration file'
+    required: true
+  extra_args:
+    description: 'Extra arguments for verible-linter'
+    required: false
+  paths:
+    description: 'Optional array of paths to directories with source code to check'
+    required: false
+    default: '.'
+  exclude_paths:
+    description: 'Exclude these paths after finding all target files'
+    required: false
+  log_file:
+    description: 'Name for a log file'
+    required: false
+    default: 'verible-verilog-lint.log'
+  github_token:
+    description: 'GITHUB_TOKEN'
+    default: ''
+runs:
+  using: 'composite'
+  steps:
+    - run: sudo apt update
+      shell: bash
+    - run: sudo apt install -y python3 wget python3-click
+      shell: bash
+    - run: mkdir verible && wget -qO- https://github.com/google/verible/releases/download/v0.0-1213-g9e5c085/verible-v0.0-1213-g9e5c085-Ubuntu-20.04-focal-x86_64.tar.gz | tar -zxvf - -C verible --strip-components=1
+      shell: bash
+    - run:  for i in $PWD/verible/bin/*; do sudo ln -s $i /bin/$(basename $i); done
+      shell: bash
+    - run: curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s
+      shell: bash
+    - run: |
+        export REVIEWDOG_GITHUB_API_TOKEN="${{ inputs.github_token }}"
+        ${{ github.action_path }}/action.py \
+        --conf-file "${{ inputs.config_file }}" \
+        --extra-opts "${{ inputs.extra_args }}" \
+        --exclude-paths "${{ inputs.exclude_paths }}" \
+        --log-file "${{ inputs.log_file }}" \
+        "${{ inputs.paths }}" || exitcode=$?
+        echo "Running reviewdog"
+        cat "${{ inputs.log_file }}" |
+        ./bin/reviewdog -efm="%f:%l:%c: %m" \
+        -reporter=github-pr-review \
+        -fail-on-error="false" \
+        -filter-mode="nofilter" || cat "${{ inputs.log_file }}"
+        exit $exitcode
+      shell: bash
