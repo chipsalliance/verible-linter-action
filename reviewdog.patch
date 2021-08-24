@@ -1,0 +1,140 @@
+diff --git a/cienv/github_actions.go b/cienv/github_actions.go
+index 46971d1..def780d 100644
+--- a/cienv/github_actions.go
++++ b/cienv/github_actions.go
+@@ -45,10 +45,13 @@ type GitHubPullRequest struct {
+ 
+ // LoadGitHubEvent loads GitHubEvent if it's running in GitHub Actions.
+ func LoadGitHubEvent() (*GitHubEvent, error) {
+-	eventPath := os.Getenv("GITHUB_EVENT_PATH")
++	eventPath := os.Getenv("OVERRIDE_GITHUB_EVENT_PATH")
+ 	if eventPath == "" {
+-		return nil, errors.New("GITHUB_EVENT_PATH not found")
+-	}
++            eventPath = os.Getenv("GITHUB_EVENT_PATH")
++            if eventPath == "" {
++                    return nil, errors.New("GITHUB_EVENT_PATH not found")
++            }
++        }
+ 	return loadGitHubEventFromPath(eventPath)
+ }
+ 
+@@ -67,10 +70,13 @@ func loadGitHubEventFromPath(eventPath string) (*GitHubEvent, error) {
+ }
+ 
+ func getBuildInfoFromGitHubAction() (*BuildInfo, bool, error) {
+-	eventPath := os.Getenv("GITHUB_EVENT_PATH")
++	eventPath := os.Getenv("OVERRIDE_GITHUB_EVENT_PATH")
+ 	if eventPath == "" {
+-		return nil, false, errors.New("GITHUB_EVENT_PATH not found")
+-	}
++            eventPath = os.Getenv("GITHUB_EVENT_PATH")
++            if eventPath == "" {
++                    return nil, false, errors.New("GITHUB_EVENT_PATH not found")
++            }
++        }
+ 	return getBuildInfoFromGitHubActionEventPath(eventPath)
+ }
+ func getBuildInfoFromGitHubActionEventPath(eventPath string) (*BuildInfo, bool, error) {
+@@ -104,6 +110,22 @@ func IsInGitHubAction() bool {
+ 	return os.Getenv("GITHUB_ACTIONS") != ""
+ }
+ 
++func IsForkedRepo() bool {
++	event, err := LoadGitHubEvent()
++	if err != nil {
++		return false
++	}
++	return event.PullRequest.Head.Repo.Owner.ID != event.PullRequest.Base.Repo.Owner.ID
++}
++
++func ActionName() string {
++        event, err := LoadGitHubEvent()
++	if err != nil {
++		return ""
++	}
++        return event.ActionName
++}
++
+ // HasReadOnlyPermissionGitHubToken returns true if reviewdog is running in GitHub
+ // Actions and running for PullRequests from forked repository with read-only token.
+ // https://docs.github.com/en/actions/reference/events-that-trigger-workflows#pull_request_target
+diff --git a/cmd/reviewdog/main.go b/cmd/reviewdog/main.go
+index 3d1da39..b65c610 100644
+--- a/cmd/reviewdog/main.go
++++ b/cmd/reviewdog/main.go
+@@ -227,6 +227,7 @@ func main() {
+ func run(r io.Reader, w io.Writer, opt *option) error {
+ 	ctx := context.Background()
+ 
++        fmt.Fprintln(w, "reviewdog: Running a modified version.")
+ 	if opt.version {
+ 		fmt.Fprintln(w, commands.Version)
+ 		return nil
+@@ -249,6 +250,7 @@ func run(r io.Reader, w io.Writer, opt *option) error {
+ 
+ 	if isProject {
+ 		var err error
++                fmt.Fprintln(w, "reviewdog: We're in project mode.")
+ 		projectConf, err = projectConfig(opt.conf)
+ 		if err != nil {
+ 			return err
+@@ -256,6 +258,7 @@ func run(r io.Reader, w io.Writer, opt *option) error {
+ 
+ 		cs = reviewdog.NewUnifiedCommentWriter(w)
+ 	} else {
++                fmt.Fprintln(w, "reviewdog: We're NOT in project mode.")
+ 		cs = reviewdog.NewRawCommentWriter(w)
+ 	}
+ 
+@@ -275,12 +278,20 @@ func run(r io.Reader, w io.Writer, opt *option) error {
+ 			fmt.Fprintln(os.Stderr, "reviewdog: this is not PullRequest build.")
+ 			return nil
+ 		}
++                if isPR {
++                        fmt.Fprintln(w, "reviewdog: We're in a PR review run.")
++                }
++
++                if cienv.IsForkedRepo() {
++                        fmt.Fprintln(w, "reviewdog: this is a PR from a forked repo.")
++                }
++                fmt.Fprintln(w, "reviewdog: ActionName: ", cienv.ActionName())
+ 		// If it's running in GitHub Actions and it's PR from forked repository,
+ 		// replace comment writer to GitHubActionLogWriter to create annotations
+ 		// instead of review comment because if it's PR from forked repository,
+ 		// GitHub token doesn't have write permission due to security concern and
+ 		// cannot post results via Review API.
+-		if cienv.IsInGitHubAction() && cienv.HasReadOnlyPermissionGitHubToken() {
++		if false {
+ 			fmt.Fprintln(w, `reviewdog: This GitHub token doesn't have write permission of Review API [1], 
+ so reviewdog will report results via logging command [2] and create annotations similar to
+ github-pr-check reporter as a fallback.
+@@ -290,6 +301,7 @@ github-pr-check reporter as a fallback.
+ 		} else {
+ 			cs = reviewdog.MultiCommentService(gs, cs)
+ 		}
++                fmt.Fprintln(w, "%#v", cs)
+ 		ds = gs
+ 	case "gitlab-mr-discussion":
+ 		build, cli, err := gitlabBuildWithClient()
+@@ -389,7 +401,7 @@ github-pr-check reporter as a fallback.
+ 	if err != nil {
+ 		return err
+ 	}
+-
++        
+ 	app := reviewdog.NewReviewdog(toolName(opt), p, cs, ds, opt.filterMode, opt.failOnError)
+ 	return app.Run(ctx, r)
+ }
+diff --git a/reviewdog.go b/reviewdog.go
+index 2174610..0183d15 100644
+--- a/reviewdog.go
++++ b/reviewdog.go
+@@ -79,6 +79,7 @@ func (w *Reviewdog) runFromResult(ctx context.Context, results []*rdf.Diagnostic
+ 			ToolName: w.toolname,
+ 		}
+ 		if err := w.c.Post(ctx, comment); err != nil {
++                        fmt.Println("ERROR posting comment: ", err)
+ 			return err
+ 		}
+ 		hasViolations = true
