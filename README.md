@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - uses: antmicro/verible-actions@main
+    - uses: chipsalliance/verible-linter-action@main
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -35,7 +35,7 @@ You can provide optional arguments to specify paths, exclude paths,
 a config file and extra arguments for ``verible-verilog-lint``.
 
 ```yaml
-- uses: antmicro/verible-actions@main
+- uses: chipsalliance/verible-linter-action@main
   with:
     config_file: 'config.rules'
     paths: |
@@ -109,7 +109,7 @@ jobs:
       - run: |
           unzip event.json.zip
       - name: Run Verible action with Reviewdog
-        uses: antmicro/verible-linter-action@main
+        uses: chipsalliance/verible-linter-action@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
