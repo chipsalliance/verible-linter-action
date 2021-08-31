@@ -7,9 +7,6 @@ on:
   schedule:
     - cron: '0 0 * * 4'
 
-env:
-  DOCKER_BUILDKIT: 1
-
 jobs:
 
   test:

@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:experimental
-
 FROM ubuntu:20.04
 
 RUN apt-get update -qq \
@@ -20,9 +18,11 @@ RUN mkdir verible \
 
 ENV GOBIN=/opt/go/bin
 
+# FIXME This layer might be avoid by using BuildKit and --mount=type=bind
+COPY reviewdog.patch /tmp/reviewdog/reviewdog.patch
+
 # Install reviewdog
-RUN --mount=type=bind,src=.,target=/tmp/reviewdog \
- git clone https://github.com/reviewdog/reviewdog \
+RUN git clone https://github.com/reviewdog/reviewdog \
  && cd reviewdog \
  && git checkout 72c205e138df049330f2a668c33782cda55d61f6 \
  && git apply /tmp/reviewdog/reviewdog.patch \
