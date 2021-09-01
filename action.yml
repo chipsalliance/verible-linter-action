@@ -1,6 +1,7 @@
 name: 'verible-linter'
 description: 'This action lints Verilog/SystemVerilog code'
 author: 'Antmicro'
+
 inputs:
   config_file:
     description: 'Relative path to configuration file'
@@ -25,63 +26,7 @@ inputs:
   reviewdog_reporter:
     description: '-reporter option to reviewdog'
     default: 'github-pr-review'
-runs:
-  using: 'composite'
-  steps:
-    - run: sudo apt update
-      shell: bash
-    - run: sudo apt install -y python3 wget python3-click golang-go
-      shell: bash
-    - run: mkdir verible && wget -qO- https://github.com/google/verible/releases/download/v0.0-1213-g9e5c085/verible-v0.0-1213-g9e5c085-Ubuntu-20.04-focal-x86_64.tar.gz | tar -zxvf - -C verible --strip-components=1
-      shell: bash
-    - run:  for i in $PWD/verible/bin/*; do sudo ln -s $i /bin/$(basename $i); done
-      shell: bash
-    - name: Install reviewdog
-      run: |
-        git clone https://github.com/reviewdog/reviewdog
-        cd reviewdog
-        git checkout 72c205e138df049330f2a668c33782cda55d61f6
-        git apply ${{ github.action_path }}/reviewdog.patch
-        mkdir ../bin
-        go build all
-        GOBIN=`pwd`/../bin go install ./cmd/reviewdog
-        cd ..
-        rm -rf reviewdog
-        ./bin/reviewdog --version
-      shell: bash
-    - run: |
-        event_file=event.json
-        diff_cmd="git diff FECH_HEAD"
-        if [ -f "$event_file" ]; then
-            pr_branch=$(cat event.json | \
-            python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['ref'])")
-            base_branch=$(cat event.json | \
-            python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['base']['ref'])")
-            git fetch origin $pr_branch
-            git checkout $pr_branch
-            echo "the PR branch is $pr_branch"
-            echo "the base branch is $base_branch"
-            diff_cmd="git diff $base_branch $pr_branch" 
-            export OVERRIDE_GITHUB_EVENT_PATH=`pwd`/event.json
-        fi
 
-        touch "${{ inputs.log_file }}"
-        export REVIEWDOG_GITHUB_API_TOKEN="${{ inputs.github_token }}"
-        ${{ github.action_path }}/action.py \
-        --conf-file "${{ inputs.config_file }}" \
-        --extra-opts "${{ inputs.extra_args }}" \
-        --exclude-paths "${{ inputs.exclude_paths }}" \
-        --log-file "${{ inputs.log_file }}" \
-        "${{ inputs.paths }}" || exitcode=$?
-        echo "Running reviewdog"
-        cat "${{ inputs.log_file }}" |
-        ./bin/reviewdog -efm="%f:%l:%c: %m" \
-        -reporter="${{ inputs.reviewdog_reporter }}" \
-        -fail-on-error="false" \
-        -name="verible-verilog-lint" \
-        -diff="$diff_cmd" || cat "${{ inputs.log_file }}"
-        if [ -f "$event_file" ]; then
-            git checkout -
-        fi
-        exit $exitcode
-      shell: bash
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
