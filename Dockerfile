@@ -13,8 +13,8 @@ RUN apt-get update -qq \
  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir verible \
- && curl -fsSL https://github.com/google/verible/releases/download/v0.0-1213-g9e5c085/verible-v0.0-1213-g9e5c085-Ubuntu-20.04-focal-x86_64.tar.gz | tar -zxvf - -C verible --strip-components=1 \
- && for i in ./verible/bin/*; do ln -s $i /bin/$(basename $i); done
+ && curl -fsSL https://github.com/chipsalliance/verible/releases/download/v0.0-1343-gee63d53/verible-v0.0-1343-gee63d53-Ubuntu-20.04-focal-x86_64.tar.gz | tar -zxvf - -C verible --strip-components=1 \
+ && for i in ./verible/bin/*; do cp $i /bin/$(basename $i); done
 
 ENV GOBIN=/opt/go/bin
 
@@ -34,5 +34,6 @@ RUN git clone https://github.com/reviewdog/reviewdog \
 
 COPY entrypoint.sh /opt/antmicro/entrypoint.sh
 COPY action.py /opt/antmicro/action.py
+WORKDIR /opt/antmicro
 
 ENTRYPOINT ["/opt/antmicro/entrypoint.sh"]
