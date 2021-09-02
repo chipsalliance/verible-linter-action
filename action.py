@@ -74,8 +74,10 @@ def find_sources_in_paths(paths):
               help='exclude these paths from the files to lint')
 @click.option('--log-file', '-l', type=str, required=False,
               help='log file name')
+@click.option('--patch', '-p', type=str, required=False,
+              help='patch file name')
 @click.argument('path', nargs=-1, required=True)
-def main(conf_file, extra_opts, exclude_paths, log_file, path):
+def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
     '''
     Lint .v and .sv files specified in PATHs
     '''
@@ -88,6 +90,13 @@ def main(conf_file, extra_opts, exclude_paths, log_file, path):
         extra_opts = extra_opts.split()
     else:
         extra_opts = []
+
+    if patch:
+        patch = ["--autofix=yes", "--autofix_output_file=" + patch]
+        # use this for newer version of Verible:
+        #patch = ["--autofix=patch", "--autofix_output_file=" + patch]
+    else:
+        patch = []
 
     paths = unwrap_from_gha_string(path)
     # set of target files to lint
@@ -102,7 +111,8 @@ def main(conf_file, extra_opts, exclude_paths, log_file, path):
         warnings.warn("File set is empty, the action has nothing to do.")
         exit()
 
-    command = ["verible-verilog-lint"] + conf_file + extra_opts + list(files)
+    command = (["verible-verilog-lint"]
+               + patch + conf_file + extra_opts + list(files))
     print("Running " + " ".join(command) + "\n\n")
     verible_linted = subprocess.run(command, capture_output=True)
 

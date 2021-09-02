@@ -26,6 +26,10 @@ inputs:
   reviewdog_reporter:
     description: '-reporter option to reviewdog'
     default: 'github-pr-review'
+  suggest_fixes:
+    description: 'Post results of using --autofix option as change suggestions,
+                  works only with github-pre-review reporter'
+    default: 'true'
 
 runs:
   using: 'docker'
