@@ -16,13 +16,37 @@ fi
 
 touch "$INPUT_LOG_FILE"
 export REVIEWDOG_GITHUB_API_TOKEN="$INPUT_GITHUB_TOKEN"
+patch=$(mktemp)
 
 /opt/antmicro/action.py \
   --conf-file "$INPUT_CONFIG_FILE" \
   --extra-opts "$INPUT_EXTRA_ARGS" \
   --exclude-paths "$INPUT_EXCLUDE_PATHS" \
   --log-file "$INPUT_LOG_FILE" \
+  --patch "$patch" \
   "$INPUT_PATHS" || exitcode=$?
+
+# If posing both change suggestions and review
+# first remove the fixed parts from (INPUT_LOG_FILE)
+# in order not to double-report
+if [ "$INPUT_SUGGEST_FIXES" = "true" ] && [ "$INPUT_REVIEWDOG_REPORTER" = "github-pr-review" ]
+then
+  # remove every line containing "(fixed)" and the preceding line
+  perl -i -ne 'push @lines, $_;
+    splice @lines, 0, 2 if /\(fixed\)/;
+    print shift @lines if @lines > 1
+    }{ print @lines;' "$INPUT_LOG_FILE"
+
+  echo "posting autofix results"
+  "$GOBIN"/reviewdog -name="verible-verilog-lint" \
+    -f=diff -f.diff.strip=1 \
+    -reporter="github-pr-review" \
+    -filter-mode="diff_context" \
+    -level="info" \
+    -diff="$diff_cmd" \
+    -fail-on-error="false" <"$patch" || true
+fi
+rm "$patch"
 
 echo "Running reviewdog"
 
