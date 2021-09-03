@@ -8,6 +8,7 @@ RUN apt-get update -qq \
     golang-go \
     python3 \
     python3-click \
+    python3-unidiff \
  && apt-get autoclean && apt-get clean && apt-get -y autoremove \
  && update-ca-certificates \
  && rm -rf /var/lib/apt/lists/*
@@ -34,6 +35,7 @@ RUN git clone https://github.com/reviewdog/reviewdog \
 
 COPY entrypoint.sh /opt/antmicro/entrypoint.sh
 COPY action.py /opt/antmicro/action.py
+COPY rdf_gen.py /opt/antmicro/rdf_gen.py
 WORKDIR /opt/antmicro
 
 ENTRYPOINT ["/opt/antmicro/entrypoint.sh"]
