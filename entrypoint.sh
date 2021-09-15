@@ -16,45 +16,42 @@ fi
 
 touch "$INPUT_LOG_FILE"
 export REVIEWDOG_GITHUB_API_TOKEN="$INPUT_GITHUB_TOKEN"
-patch=$(mktemp)
+rdf_log=$(mktemp)
+if [ "$INPUT_SUGGEST_FIXES" = "true" ]; then
+  echo "suggesting fixes"
+  patch=$(mktemp)
+  /opt/antmicro/action.py \
+    --conf-file "$INPUT_CONFIG_FILE" \
+    --extra-opts "$INPUT_EXTRA_ARGS" \
+    --exclude-paths "$INPUT_EXCLUDE_PATHS" \
+    --log-file "$INPUT_LOG_FILE" \
+    --patch "$patch" \
+    "$INPUT_PATHS" || exitcode=$?
 
-/opt/antmicro/action.py \
-  --conf-file "$INPUT_CONFIG_FILE" \
-  --extra-opts "$INPUT_EXTRA_ARGS" \
-  --exclude-paths "$INPUT_EXCLUDE_PATHS" \
-  --log-file "$INPUT_LOG_FILE" \
-  --patch "$patch" \
-  "$INPUT_PATHS" || exitcode=$?
+  /opt/antmicro/rdf_gen.py \
+    --efm-file "$INPUT_LOG_FILE" \
+    --diff-file "$patch" > "$rdf_log"
+  rm "$patch"
+else
+  echo "not suggesting fixes"
+  /opt/antmicro/action.py \
+    --conf-file "$INPUT_CONFIG_FILE" \
+    --extra-opts "$INPUT_EXTRA_ARGS" \
+    --exclude-paths "$INPUT_EXCLUDE_PATHS" \
+    --log-file "$INPUT_LOG_FILE" \
+    "$INPUT_PATHS" || exitcode=$?
 
-# If posing both change suggestions and review
-# first remove the fixed parts from (INPUT_LOG_FILE)
-# in order not to double-report
-if [ "$INPUT_SUGGEST_FIXES" = "true" ] && [ "$INPUT_REVIEWDOG_REPORTER" = "github-pr-review" ]
-then
-  # remove every line containing "(fixed)" and the preceding line
-  perl -i -ne 'push @lines, $_;
-    splice @lines, 0, 2 if /\(fixed\)/;
-    print shift @lines if @lines > 1
-    }{ print @lines;' "$INPUT_LOG_FILE"
-
-  echo "posting autofix results"
-  "$GOBIN"/reviewdog -name="verible-verilog-lint" \
-    -f=diff -f.diff.strip=1 \
-    -reporter="github-pr-review" \
-    -filter-mode="diff_context" \
-    -level="info" \
-    -diff="$diff_cmd" \
-    -fail-on-error="false" <"$patch" || true
+  /opt/antmicro/rdf_gen.py \
+    --efm-file "$INPUT_LOG_FILE" > "$rdf_log"
 fi
-rm "$patch"
 
 echo "Running reviewdog"
 
-"$GOBIN"/reviewdog -efm="%f:%l:%c: %m" \
+"$GOBIN"/reviewdog -f=rdjson \
   -reporter="$INPUT_REVIEWDOG_REPORTER" \
   -fail-on-error="false" \
   -name="verible-verilog-lint" \
-  -diff="$diff_cmd" < "$INPUT_LOG_FILE" || cat "$INPUT_LOG_FILE"
+  -diff="$diff_cmd" < "$rdf_log" || cat "$INPUT_LOG_FILE"
 
 if [ -f "$event_file" ]; then
   git checkout -
