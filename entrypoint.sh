@@ -6,8 +6,18 @@ diff_cmd="git diff FECH_HEAD"
 if [ -f "$event_file" ]; then
   pr_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['ref'])" < event.json)
   base_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['base']['ref'])" < event.json)
-  git fetch origin "$pr_branch"
+  clone_url=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['repo']['clone_url'])" < event.json)
+  echo "remotes:"
+  git remote -v
+  echo "adding new remote: $clone_url"
+  git remote add pr_repo "$clone_url"
+  echo "remotes:"
+  git remote -v
+  echo "fetching:"
+  git fetch pr_repo "$pr_branch"
   git checkout "$pr_branch"
+  echo "current HEAD is: "
+  git rev-parse HEAD
   echo "the PR branch is $pr_branch"
   echo "the base branch is $base_branch"
   diff_cmd="git diff $base_branch $pr_branch"
