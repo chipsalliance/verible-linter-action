@@ -14,7 +14,7 @@ RUN apt-get update -qq \
  && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir verible \
- && curl -fsSL https://github.com/chipsalliance/verible/releases/download/v0.0-1343-gee63d53/verible-v0.0-1343-gee63d53-Ubuntu-20.04-focal-x86_64.tar.gz | tar -zxvf - -C verible --strip-components=1 \
+ && curl -fsSL https://github.com/chipsalliance/verible/releases/download/v0.0-1442-g27693bd/verible-v0.0-1442-g27693bd-Ubuntu-20.04-focal-x86_64.tar.gz | tar -zxvf - -C verible --strip-components=1 \
  && for i in ./verible/bin/*; do cp $i /bin/$(basename $i); done
 
 ENV GOBIN=/opt/go/bin
