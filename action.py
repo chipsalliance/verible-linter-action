@@ -92,9 +92,7 @@ def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
         extra_opts = []
 
     if patch:
-        patch = ["--autofix=yes", "--autofix_output_file=" + patch]
-        # use this for newer version of Verible:
-        #patch = ["--autofix=patch", "--autofix_output_file=" + patch]
+        patch = ["--autofix=patch", "--autofix_output_file=" + patch]
     else:
         patch = []
 
@@ -116,7 +114,7 @@ def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
     print("Running " + " ".join(command) + "\n\n")
     verible_linted = subprocess.run(command, capture_output=True)
 
-    issues = verible_linted.stdout.decode("utf-8")
+    issues = verible_linted.stderr.decode("utf-8")
     log_raw(issues, log_file if log_file else 'verible-verilog-lint.log')
 
     exit(issues != "")
