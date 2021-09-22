@@ -92,9 +92,7 @@ def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
         extra_opts = []
 
     if patch:
-        patch = ["--autofix=yes", "--autofix_output_file=" + patch]
-        # use this for newer version of Verible:
-        #patch = ["--autofix=patch", "--autofix_output_file=" + patch]
+        patch = ["--autofix=patch", "--autofix_output_file=" + patch]
     else:
         patch = []
 
