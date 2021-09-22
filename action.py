@@ -117,8 +117,6 @@ def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
     issues = verible_linted.stderr.decode("utf-8")
     log_raw(issues, log_file if log_file else 'verible-verilog-lint.log')
 
-    exit(issues != "")
-
 
 if __name__ == '__main__':
     main()
