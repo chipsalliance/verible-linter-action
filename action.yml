@@ -30,6 +30,10 @@ inputs:
     description: 'Post results of using --autofix option as change suggestions,
                   works only with github-pre-review reporter'
     default: 'true'
+  fail_on_error:
+    description: 'Fail the action when rule violations are found'
+    default: 'false'
+
 
 runs:
   using: 'docker'
