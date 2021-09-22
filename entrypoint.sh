@@ -36,7 +36,7 @@ if [ "$INPUT_SUGGEST_FIXES" = "true" ]; then
     --exclude-paths "$INPUT_EXCLUDE_PATHS" \
     --log-file "$INPUT_LOG_FILE" \
     --patch "$patch" \
-    "$INPUT_PATHS" || exitcode=$?
+    "$INPUT_PATHS"
 
   /opt/antmicro/rdf_gen.py \
     --efm-file "$INPUT_LOG_FILE" \
@@ -49,7 +49,7 @@ else
     --extra-opts "$INPUT_EXTRA_ARGS" \
     --exclude-paths "$INPUT_EXCLUDE_PATHS" \
     --log-file "$INPUT_LOG_FILE" \
-    "$INPUT_PATHS" || exitcode=$?
+    "$INPUT_PATHS"
 
   /opt/antmicro/rdf_gen.py \
     --efm-file "$INPUT_LOG_FILE" > "$rdf_log"
@@ -59,9 +59,9 @@ echo "Running reviewdog"
 
 "$GOBIN"/reviewdog -f=rdjson \
   -reporter="$INPUT_REVIEWDOG_REPORTER" \
-  -fail-on-error="false" \
+  -fail-on-error="$INPUT_FAIL_ON_ERROR" \
   -name="verible-verilog-lint" \
-  -diff="$diff_cmd" < "$rdf_log" || cat "$INPUT_LOG_FILE"
+  -diff="$diff_cmd" < "$rdf_log" || exitcode=$?
 
 if [ -f "$event_file" ]; then
   git checkout -
