@@ -110,7 +110,7 @@ def read_efm(filename):
         if len(data) > 4:
             # there are ':' inside the message part
             # merge the message part into one string
-            data = data[0:3] + [''.join(data[3:])]
+            data = data[0:3] + [':'.join(data[3:])]
 
         # now the data has 4 elements
         data = [elem.strip() for elem in data]
