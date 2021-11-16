@@ -1,8 +1,10 @@
-Verible Lint Action
-===================
+# Verible Linter Action
 
-Usage
------
+This action uses [Verible](https://github.com/chipsalliance/verible) to identify coding style issues in SystemVerilog code.
+
+![verible linter action](https://user-images.githubusercontent.com/8438531/140962421-0a51e7b8-dc1c-4f87-b84b-1c2f3462cfca.png)
+
+## Usage
 
 See [action.yml](action.yml)
 
@@ -47,8 +49,7 @@ a config file and extra arguments for ``verible-verilog-lint``.
     github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Automatic review on PRs from external repositories
---------------------------------------------------
+## Automatic review on PRs from external repositories
 
 In GitHub Actions, workflows triggered by external repositories may only have
 [read access to the main repository](https://docs.github.com/en/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token).
