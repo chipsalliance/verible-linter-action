@@ -112,6 +112,8 @@ def read_efm(filename):
             # merge the message part into one string
             data = data[0:3] + [':'.join(data[3:])]
 
+        data[2] = re.split("-", data[2])[0]
+
         # now the data has 4 elements
         data = [elem.strip() for elem in data]
         messages.append(
