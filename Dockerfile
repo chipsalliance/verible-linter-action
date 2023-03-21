@@ -6,9 +6,11 @@ RUN apt-get update -qq \
     curl \
     git \
     golang-go \
+    jq \
     python3 \
     python3-click \
     python3-unidiff \
+    wget \
  && apt-get autoclean && apt-get clean && apt-get -y autoremove \
  && update-ca-certificates \
  && rm -rf /var/lib/apt/lists/*
