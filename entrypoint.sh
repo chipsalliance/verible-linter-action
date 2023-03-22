@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 event_file=event.json
 diff_cmd="git diff FECH_HEAD"
 
