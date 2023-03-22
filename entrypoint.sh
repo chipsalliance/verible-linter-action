@@ -2,8 +2,10 @@
 
 set -e
 
+ACTION_PATH=`dirname "$0"`
+
 event_file=event.json
-diff_cmd="git diff FECH_HEAD"
+diff_cmd="git diff FETCH_HEAD"
 
 # XXX: workaround for "fatal: detected dubious ownership in repository" when running in a container
 git config --global --add safe.directory '*'
@@ -35,7 +37,7 @@ rdf_log=$(mktemp)
 if [ "$INPUT_SUGGEST_FIXES" = "true" ]; then
   echo "suggesting fixes"
   patch=$(mktemp)
-  /opt/antmicro/action.py \
+  $ACTION_PATH/action.py \
     --conf-file "$INPUT_CONFIG_FILE" \
     --extra-opts "$INPUT_EXTRA_ARGS" \
     --exclude-paths "$INPUT_EXCLUDE_PATHS" \
@@ -43,26 +45,26 @@ if [ "$INPUT_SUGGEST_FIXES" = "true" ]; then
     --patch "$patch" \
     "$INPUT_PATHS"
 
-  /opt/antmicro/rdf_gen.py \
+  $ACTION_PATH/rdf_gen.py \
     --efm-file "$INPUT_LOG_FILE" \
     --diff-file "$patch" > "$rdf_log"
   rm "$patch"
 else
   echo "not suggesting fixes"
-  /opt/antmicro/action.py \
+  $ACTION_PATH/action.py \
     --conf-file "$INPUT_CONFIG_FILE" \
     --extra-opts "$INPUT_EXTRA_ARGS" \
     --exclude-paths "$INPUT_EXCLUDE_PATHS" \
     --log-file "$INPUT_LOG_FILE" \
     "$INPUT_PATHS"
 
-  /opt/antmicro/rdf_gen.py \
+  $ACTION_PATH/rdf_gen.py \
     --efm-file "$INPUT_LOG_FILE" > "$rdf_log"
 fi
 
 echo "Running reviewdog"
 
-"$GOBIN"/reviewdog -f=rdjson \
+./reviewdog/reviewdog -f=rdjson \
   -reporter="$INPUT_REVIEWDOG_REPORTER" \
   -fail-on-error="$INPUT_FAIL_ON_ERROR" \
   -name="verible-verilog-lint" \

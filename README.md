@@ -17,6 +17,8 @@ If you don't wish to use the automatic PR review,
 you can omit the ``github_token`` input.
 If you'd like to use a reporter of reviewdog other than ``github-pr-review``,
 you can pass its name in the input ``reviewdog_reporter``.
+If you want to declare Verible version to be used,
+you can pass its release tag in the input ``verible_version``.
 
 Here's a basic example to lint all ``*.v`` and ``*.sv`` files:
 ```yaml
@@ -34,7 +36,7 @@ jobs:
 ```
 
 You can provide optional arguments to specify paths, exclude paths,
-a config file and extra arguments for ``verible-verilog-lint``.
+a config file, Verible version and extra arguments for ``verible-verilog-lint``.
 
 ```yaml
 - uses: chipsalliance/verible-linter-action@main
@@ -46,6 +48,7 @@ a config file and extra arguments for ``verible-verilog-lint``.
     exclude_paths: |
       ./rtl/some_file
     extra_args: "--check_syntax=true"
+    verible_version: "v0.0-3100-gd75b1c47"
     github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 

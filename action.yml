@@ -33,8 +33,52 @@ inputs:
   fail_on_error:
     description: 'Fail the action when rule violations are found'
     default: 'false'
+  verible_version:
+    description: 'Use selected Verible version (defaults to latest release)'
+    default: 'latest'
 
 
 runs:
-  using: 'docker'
-  image: 'docker://ghcr.io/chipsalliance/verible-linter-action'
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+          sudo apt-get update -qq
+          sudo apt-get -y install --no-install-recommends ca-certificates curl git golang-go jq python3 python3-click python3-unidiff wget 
+          sudo update-ca-certificates
+    - name: Download Verible
+      shell: bash
+      run: |
+          mkdir verible
+          if [ "${{ inputs.verible_version }}" = "latest" ]; then
+            VERIBLE_TARBALL=$(curl -fsSL https://api.github.com/repos/chipsalliance/verible/releases/latest | jq -r '.assets[] | select(.browser_download_url | test("(?=.*Ubuntu-20.04)(?=.*x86_64)")).browser_download_url')
+          else
+            VERIBLE_TARBALL="https://github.com/chipsalliance/verible/releases/download/${{ inputs.verible_version }}/verible-${{ inputs.verible_version }}-Ubuntu-20.04-focal-x86_64.tar.gz"
+          fi
+          echo "Downloading $VERIBLE_TARBALL"
+          wget -qO- $VERIBLE_TARBALL | tar -zxvf - -C verible --strip-components=1
+          for i in ./verible/bin/*; do sudo cp $i /usr/local/bin/$(basename $i); done
+    - name: Build reviewdog
+      shell: bash
+      run: |
+          git clone https://github.com/reviewdog/reviewdog
+          cd reviewdog
+          git checkout 72c205e138df049330f2a668c33782cda55d61f6
+          git apply ${{ github.action_path }}/reviewdog.patch
+          go build ./cmd/reviewdog
+          cd ..
+          ./reviewdog/reviewdog --version
+    - name: Run linter
+      shell: bash
+      env:
+        INPUT_CONFIG_FILE: ${{ inputs.config_file }}
+        INPUT_EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
+        INPUT_EXTRA_ARGS: ${{ inputs.extra_args }}
+        INPUT_FAIL_ON_ERROR: ${{ inputs.fail_on_error }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_LOG_FILE: ${{ inputs.log_file }}
+        INPUT_PATHS: ${{ inputs.paths }}
+        INPUT_REVIEWDOG_REPORTER: ${{ inputs.reviewdog_reporter }}
+        INPUT_SUGGEST_FIXES: ${{ inputs.suggest_fixes }}
+      run: ${{ github.action_path }}/entrypoint.sh
