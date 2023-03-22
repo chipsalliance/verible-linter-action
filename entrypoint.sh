@@ -3,6 +3,9 @@
 event_file=event.json
 diff_cmd="git diff FECH_HEAD"
 
+# XXX: workaround for "fatal: detected dubious ownership in repository" when running in a container
+git config --global --add safe.directory '*'
+
 if [ -f "$event_file" ]; then
   pr_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['ref'])" < event.json)
   base_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['base']['ref'])" < event.json)
