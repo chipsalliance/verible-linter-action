@@ -1,0 +1,7 @@
+name: 'verible-trigger-send'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Upload Event File
+      uses: chipsalliance/verible-actions-common/event-file-upload@main
