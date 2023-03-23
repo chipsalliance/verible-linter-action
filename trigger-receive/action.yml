@@ -1,0 +1,7 @@
+name: 'verible-trigger-receive'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download Event File
+      uses: chipsalliance/verible-actions-common/event-file-download@main
