@@ -40,6 +40,14 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Check if running on Ubuntu Linux
+      shell: bash
+      run: |
+          source /etc/os-release
+          case "$ID" in
+            ubuntu) echo 'Running on Ubuntu Linux'; exit 0 ;;
+                 *) echo 'Not running on Ubuntu Linux'; exit 1 ;; 
+          esac
     - name: Install dependencies
       shell: bash
       run: |
