@@ -11,9 +11,9 @@ diff_cmd="git diff FETCH_HEAD"
 git config --global --add safe.directory '*'
 
 if [ -f "$event_file" ]; then
-  pr_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['ref'])" < event.json)
-  base_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['base']['ref'])" < event.json)
-  clone_url=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['repo']['clone_url'])" < event.json)
+  pr_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['ref'])" < $event_file)
+  base_branch=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['base']['ref'])" < $event_file)
+  clone_url=$(python3 -c "import sys, json; print(json.load(sys.stdin)['pull_request']['head']['repo']['clone_url'])" < $event_file)
   echo "remotes:"
   git remote -v
   echo "adding new remote: $clone_url"
@@ -28,7 +28,7 @@ if [ -f "$event_file" ]; then
   echo "the PR branch is $pr_branch"
   echo "the base branch is $base_branch"
   diff_cmd="git diff $base_branch $pr_branch"
-  export OVERRIDE_GITHUB_EVENT_PATH=$(pwd)/event.json
+  export OVERRIDE_GITHUB_EVENT_PATH=$(pwd)/$event_file
 fi
 
 touch "$INPUT_LOG_FILE"
@@ -64,7 +64,7 @@ fi
 
 echo "Running reviewdog"
 
-./reviewdog/reviewdog -f=rdjson \
+reviewdog -f=rdjson \
   -reporter="$INPUT_REVIEWDOG_REPORTER" \
   -fail-on-error="$INPUT_FAIL_ON_ERROR" \
   -name="verible-verilog-lint" \
