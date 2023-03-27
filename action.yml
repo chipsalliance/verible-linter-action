@@ -73,3 +73,8 @@ runs:
         INPUT_REVIEWDOG_REPORTER: ${{ inputs.reviewdog_reporter }}
         INPUT_SUGGEST_FIXES: ${{ inputs.suggest_fixes }}
       run: ${{ github.action_path }}/entrypoint.sh
+    - name: Upload linter log
+      uses: actions/upload-artifact@v3
+      with:
+        name: verible-linter
+        path: ${{ inputs.log_file }}
