@@ -56,38 +56,26 @@ a config file, Verible version and extra arguments for ``verible-verilog-lint``.
 
 In GitHub Actions, workflows triggered by external repositories may only have
 [read access to the main repository](https://docs.github.com/en/actions/reference/authentication-in-a-workflow#permissions-for-the-github_token).
-In order to have automatic reviews on external PRs, you need to create two workflows.
-One will be triggered on ``pull_request`` and upload the data needed by reviewdog as an artifact.
-The artifact shall store the file pointed by ``$GITHUB_EVENT_PATH`` as ``verible-trigger.json``.
-The other workflow will download the artifact and use the Verible action.
-
-For example:
-```yaml
-name: verible-trigger-send
-on:
-  pull_request:
-
-jobs:
-  verible-trigger:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: antmicro/verible-linter-action/trigger-send@main
-```
+In order to have automatic reviews on external PRs, you need to change your workflow to trigger
+on ``pull_request_target`` event and manually check out changes from pull request:
 
 ```yaml
 
-name: verible-trigger-receive
+name: Verible linter example
 on:
-  workflow_run:
-    workflows: verible-trigger-send
-    types:
-      - completed
+  pull_request_target:
 
 jobs:
-  verible-review:
+  lint:
     runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
     steps:
-      - uses: antmicro/verible-linter-action/trigger-receive@main
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Run Verible action
         uses: chipsalliance/verible-linter-action@main
         with:
