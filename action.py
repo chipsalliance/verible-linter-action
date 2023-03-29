@@ -48,14 +48,14 @@ def unwrap_from_gha_string(args):
     return elements
 
 
-def find_sources_in_paths(paths):
-    '''Scan {paths} for Verilog and SystemVerilog files
+def find_sources_in_paths(paths, exts):
+    '''Scan {paths} for files with extensions from set
     '''
     files = set()
     for filename in paths:
         # check if filename is a directory or a source file
         if os.path.isdir(filename):
-            new_files = recursive_find({".v", ".sv"}, filename)
+            new_files = recursive_find(exts, filename)
             files.update(new_files)
         elif os.path.isfile(filename):
             files.add(filename)
@@ -72,12 +72,14 @@ def find_sources_in_paths(paths):
               help='extra options for the linter')
 @click.option('--exclude-paths', '-x', required=False,
               help='exclude these paths from the files to lint')
+@click.option('--extensions', '-t', type=str, required=False,
+              help='lint files with these extensions (starting with a dot, split by comma)')
 @click.option('--log-file', '-l', type=str, required=False,
               help='log file name')
 @click.option('--patch', '-p', type=str, required=False,
               help='patch file name')
 @click.argument('path', nargs=-1, required=True)
-def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
+def main(conf_file, extra_opts, exclude_paths, extensions, log_file, patch, path):
     '''
     Lint .v and .sv files specified in PATHs
     '''
@@ -96,9 +98,14 @@ def main(conf_file, extra_opts, exclude_paths, log_file, patch, path):
     else:
         patch = []
 
+    if extensions:
+        extensions = set(ext if ext.startswith('.') else '.' + ext for ext in extensions.split())
+    else:
+        extensions = {'.v', '.sv'}
+
     paths = unwrap_from_gha_string(path)
     # set of target files to lint
-    files = find_sources_in_paths(paths)
+    files = find_sources_in_paths(paths, extensions)
 
     if exclude_paths:
         for p in exclude_paths.split():
