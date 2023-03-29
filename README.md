@@ -35,7 +35,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-You can provide optional arguments to specify paths, exclude paths,
+You can provide optional arguments to specify paths, exclude paths, extensions of tested files,
 a config file, Verible version and extra arguments for ``verible-verilog-lint``.
 
 ```yaml
@@ -49,6 +49,11 @@ a config file, Verible version and extra arguments for ``verible-verilog-lint``.
       ./rtl/some_file
     extra_args: "--check_syntax=true"
     verible_version: "v0.0-3100-gd75b1c47"
+    extensions: |
+      .sv
+      .v
+      .vh
+      .svh
     github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 

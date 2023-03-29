@@ -16,6 +16,10 @@ inputs:
   exclude_paths:
     description: 'Exclude these paths after finding all target files'
     required: false
+  extensions:
+    description: 'Run linting on files ending with following extensions'
+    required: false
+    default: ''
   log_file:
     description: 'Name for a log file'
     required: false
@@ -66,6 +70,7 @@ runs:
         INPUT_CONFIG_FILE: ${{ inputs.config_file }}
         INPUT_EXCLUDE_PATHS: ${{ inputs.exclude_paths }}
         INPUT_EXTRA_ARGS: ${{ inputs.extra_args }}
+        INPUT_EXTENSIONS: ${{ inputs.extensions }}
         INPUT_FAIL_ON_ERROR: ${{ inputs.fail_on_error }}
         INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
         INPUT_LOG_FILE: ${{ inputs.log_file }}

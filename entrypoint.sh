@@ -41,6 +41,7 @@ if [ "$INPUT_SUGGEST_FIXES" = "true" ]; then
     --conf-file "$INPUT_CONFIG_FILE" \
     --extra-opts "$INPUT_EXTRA_ARGS" \
     --exclude-paths "$INPUT_EXCLUDE_PATHS" \
+    --extensions "$INPUT_EXTENSIONS" \
     --log-file "$INPUT_LOG_FILE" \
     --patch "$patch" \
     "$INPUT_PATHS"
@@ -55,6 +56,7 @@ else
     --conf-file "$INPUT_CONFIG_FILE" \
     --extra-opts "$INPUT_EXTRA_ARGS" \
     --exclude-paths "$INPUT_EXCLUDE_PATHS" \
+    --extensions "$INPUT_EXTENSIONS" \
     --log-file "$INPUT_LOG_FILE" \
     "$INPUT_PATHS"
 
