@@ -179,7 +179,7 @@ def apply_fixes(err_messages, fixes):
         ]
 
         if not filtered_msgs:
-            print(f'Did not find any errors to be solved by fix: {fix}')
+            #print(f'Did not find any errors to be solved by fix: {fix}') #Printing this line causes reviewdog to break like in issue #34
             continue
 
         filtered_msgs[0].fix(fix)
