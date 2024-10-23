@@ -179,7 +179,7 @@ def apply_fixes(err_messages, fixes):
         ]
 
         if not filtered_msgs:
-            print(f'Did not find any errors to be solved by fix: {fix}')
+            #Did not find any errors to be solved by fix
             continue
 
         filtered_msgs[0].fix(fix)
